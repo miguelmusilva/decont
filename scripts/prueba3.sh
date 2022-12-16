@@ -2,7 +2,7 @@
 
 mamba install -y star
 
-mkdir res/contaminants_idx
+mkdir -p res/contaminants_idx
 
 echo ¿Dónde quieres guardar el archivo generado?
 read varname3

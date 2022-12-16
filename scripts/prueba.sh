@@ -15,7 +15,7 @@ done
 
 
 
-if [[ $3 == *"yes"* ]]; then
+#if [[ $3 == *"yes"* ]]; then
 	gunzip -k $2/*.gz
 	
 	if [ ! -z "$4" ]; then
@@ -26,7 +26,7 @@ if [[ $3 == *"yes"* ]]; then
     			sed -i "/$4/{N;N;N;d}" $file
     		done 
 	fi
-fi
+#fi
 
 
 
