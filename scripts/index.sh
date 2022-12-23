@@ -5,19 +5,16 @@
 # $2 : output directory
 
 
-mkdir -p res/contaminants_idx
+mkdir -p $2
 
-if [[ ! -e $2 ]] # Checking if already exists
+if [[ ! -e $2/Log.out ]] # Checking if already exists
 then
 	STAR    --runThreadN 4 \
 		--runMode genomeGenerate \
 		--genomeDir $2 \
 		--genomeFastaFiles $1 \
 		--genomeSAindexNbases 9
+	echo -e "\n########## $2 index succesfully made ##########\n"
 else
-	echo "··········Index already exists. The script will continue··········"
+	echo -e "\n########## Index already exists. The script will continue ##########\n"
 fi
-
-
-
-
