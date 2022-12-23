@@ -1,5 +1,16 @@
-# This script should merge all files from a given sample (the sample id is
-# provided in the third argument ($3)) into a single file, which should be
-# stored in the output directory specified by the second argument ($2).
-#
-# The directory containing the samples is indicated by the first argument ($1).
+
+### MERGE FILES SCRIPT ###
+
+# $1 = Input Directory
+# $2 = Output Directory
+# $3 = Sample ID 
+
+mkdir -p out/merged
+
+if [[ ! -e out/merged/$3.fastq.gz ]] #Checking if already exists
+then
+	cat $1/$3*.fastq.gz > $2/$3.fastq.gz
+	echo -e "\n########## $3 correctly merged ##########\n"
+else
+	echo -e "\n########## $3 had already been merged ##########\n"
+fi
