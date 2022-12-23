@@ -1,62 +1,64 @@
 
 ### DECONTAMINATION OF SMALL-RNA SEQUENCING SAMPLES SCRIPT ###
 
-bash scripts/confirmation.sh
+# Cleanup script
+bash scripts/cleanup.sh
 
+### CONFIRMATION SCRIPT ###
 
+programs=("fastqc" "seqtk" "cutadapt" "star" "multiqc") # Programs required for the entire script
 
+echo "********** DECONTAMINATION OF SMALL-RNA SEQUENCING SAMPLES **********"
+echo "The decontamination of RNA sequencing script is about to start. ¿Are you sure (y/n)?"
+read answer
 
+if [[ $answer = *[Nn]* ]] 
+then
+	echo ·········· The script will not be launched ··········
+	exit 1
+elif [[ $answer = *[Yy]* ]]
+then
+	echo ·········· The script will be launched. Take a coffee and relax ··········
+	for program in ${programs[@]} # Check the necessary programs list and download those non-existent 
+	do
+		which $program > /dev/null
+		if [ $? -eq 1 ]
+		then
+			mamba install -y $program
+		fi
+	done
+fi
 
+# Download samples sequence
+bash scripts/download.sh data/urls data 
 
+# Download contaminants database fasta
+bash scripts/download.sh data/contaminants res yes "small nuclear"
 
+# Index the contaminants files
+bash scripts/index.sh res/contaminants_filtered.fasta res/contaminants_idx
 
+# Merge the samples into a single file > merged files
+for sid in $( ls data/*.fastq.gz | sed "s:data/::" | cut -d "-" -f1 | sort -u)
+do
+	bash scripts/merge_fastqs.sh data out/merged $sid
+done
 
+#JUST CURIOSITY
+mkdir out/fastqc
+fastqc -o out/fastqc out/merged/*.fastq.gz
 
-#Download all the files specified in data/filenames
-#for url in $(<list_of_urls>) #TODO
-#do
-#    bash scripts/download.sh $url data
-#done
+# Cutadapt method for all merged files > trimmed files
+bash scripts/cutadapt.sh
 
+# STAR method for all trimmed files
+bash scripts/star.sh
 
+# Create a report for the pipeline in two different ways 
+mkdir -p out/multiqc
+multiqc -o out/multiqc ./
+open out/multiqc/multiqc_report.html
 
+bash scripts/log.sh
 
-
-# Download the contaminants fasta file, uncompress it, and
-# filter to remove all small nuclear RNAs
-#bash scripts/download.sh <contaminants_url> res yes #TODO
-
-
-
-
-
-
-# Index the contaminants file
-#bash scripts/index.sh res/contaminants.fasta res/contaminants_idx
-
-# Merge the samples into a single file
-#for sid in $(<list_of_sample_ids>) #TODO
-#do
-    #bash scripts/merge_fastqs.sh data out/merged $sid
-#done
-
-# TODO: run cutadapt for all merged files
-# cutadapt -m 18 -a TGGAATTCTCGGGTGCCAAGG --discard-untrimmed \
-#     -o <trimmed_file> <input_file> > <log_file>
-
-# TODO: run STAR for all trimmed files
-#for fname in out/trimmed/*.fastq.gz
-#do
-    # you will need to obtain the sample ID from the filename
-    #sid=#TODO
-    # mkdir -p out/star/$sid
-    # STAR --runThreadN 4 --genomeDir res/contaminants_idx \
-    #    --outReadsUnmapped Fastx --readFilesIn <input_file> \
-    #    --readFilesCommand gunzip -c --outFileNamePrefix <output_directory>
-#done 
-
-# TODO: create a log file containing information from cutadapt and star logs
-# (this should be a single log file, and information should be *appended* to it on each run)
-# - cutadapt: Reads with adapters and total basepairs
-# - star: Percentages of uniquely mapped reads, reads mapped to multiple loci, and to too many loci
-# tip: use grep to filter the lines you're interested in
+echo -e "########## DECONTAMINATION OF SMALL-RNA SEQUENCE SAMPLES SCRIPT IS FINISHED ##########"
